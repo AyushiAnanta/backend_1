@@ -258,7 +258,7 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
         
     }
 
-    const user = User.findByIdAndUpdate(
+    const user =await User.findByIdAndUpdate(
         req.user?._id,
     {
         $set: {
@@ -408,13 +408,13 @@ const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.us._id)
+                _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
             $lookup: {
                 from: "videos",
-                localField: "watvhHistory",
+                localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
                 pipeline: [
@@ -445,6 +445,8 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                 ]
             }
         }
+
+        
     ])
 
     return res.status(200)
