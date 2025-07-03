@@ -80,18 +80,18 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
-    const { commentId } = req.params
-    const comment =await Comment.findByIdAndDelete(
-        commentId,
-        {new: true})
-    
-    
-    if (comment) {
-        throw new ApiError(400, comment ,"Error in comment deletion")
-    }
+    try {
+        const { commentId } = req.params
+        const comment =await Comment.findByIdAndDelete(
+            commentId,
+            {new: true})
         
-    return res.status(200).json(new ApiResponse(200, "comment Deleted Successfully"))
-    
+            
+        return res.status(200).json(new ApiResponse(200, "comment Deleted Successfully"))
+        
+    } catch (error) {
+        throw new ApiError(400, error)
+    }
   
 })
 

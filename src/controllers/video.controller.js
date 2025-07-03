@@ -21,7 +21,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     const aggregate = Video.aggregate([{
             $match: {
-                owner: new mongoose.Types.ObjectId(userId) 
+                owner: new mongoose.Types.ObjectId(req.user._id) 
             }
         },
         {$sort: {createdAt: -1}}
