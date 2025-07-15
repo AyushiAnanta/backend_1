@@ -251,6 +251,17 @@ const getCurrentUser = asyncHandler(async(req, res) => {
     .json(200, req.user, "current user fetched successfully")
 })
 
+const getUserById = asyncHandler(async(req, res) => {
+    const {userId} = req.params
+    const checkUserId = await User.findById(userId)
+    
+    if (!checkUserId) {
+        throw new ApiError(400, "user not found")
+    }
+    
+        return res.status(200).json(new ApiResponse(200, checkUserId , "user found successfully"))
+})
+
 const updateAccountDetails = asyncHandler(async(req, res) => {
     const {fullname, email} = req.body
 
@@ -462,6 +473,7 @@ export  {
     refreshAccesssToken,
     changeCurrentPassword,
     getCurrentUser,
+    getUserById,
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,

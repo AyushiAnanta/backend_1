@@ -2,7 +2,6 @@
 import dotenv from "dotenv";
 import connectDb from "./db/index.js";
 import { app } from "./app.js";
-import { ApiError } from "./utils/ApiError.js";
 
 dotenv.config({
     path: './.env'

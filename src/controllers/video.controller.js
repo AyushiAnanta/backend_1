@@ -36,6 +36,29 @@ const getAllVideos = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, video, "all videos fetched successfully"))
 })
 
+const getAllUserVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortType = -1 } = req.query;
+
+    const options = {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        sort: { [sortBy]: parseInt(sortType) }
+    };
+
+    const aggregate = Video.aggregate([
+        { $sort: options.sort }
+    ]);
+
+    const videos = await Video.aggregatePaginate(aggregate, options);
+
+    if (!videos) {
+        throw new ApiError(400, "Videos not available");
+    }
+
+    return res.status(200).json(new ApiResponse(200, videos, "All user's videos fetched successfully"));
+});
+
+
 const publishAVideo = asyncHandler(async (req, res) => {
     
     // TODO: get video, upload to cloudinary, create video
@@ -160,22 +183,43 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 
 })
-
 const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: delete video
-    const video =await Video.findByIdAndDelete(
-        videoId,
-    {new: true})
+  try {
+    const { videoId } = req.params;
 
-
-    if (video) {
-        throw new ApiError(400, video ,"Error in video deletion")
+    const video = await Video.findById(videoId);
+    if (!video) {
+      return res.status(404).json(new ApiResponse(404, null, 'Video not found'));
     }
-    
-    return res.status(200).json(new ApiResponse(200, "Video Deleted Successfully"))
 
-})
+    // Delete video file and thumbnail from Cloudinary
+    if (video.videoPublicId) {
+      await cloudinary.uploader.destroy(video.videoPublicId, { resource_type: 'video' });
+    }
+    if (video.thumbnailPublicId) {
+      await cloudinary.uploader.destroy(video.thumbnailPublicId, { resource_type: 'image' });
+    }
+
+    // Delete associated comments
+    await Comment.deleteMany({ videoId });
+
+    // Delete associated likes
+    await Like.deleteMany({ videoId });
+
+    // Delete views, if you have such a model
+    // await View.deleteMany({ videoId });
+
+    // Delete the video document itself
+    await video.deleteOne();
+
+    return res.status(200).json(new ApiResponse(200, null, 'Video and all associated data deleted successfully'));
+
+  } catch (error) {
+    console.error('Error deleting video:', error);
+    return res.status(500).json(new ApiResponse(500, null, 'Internal server error'));
+  }
+});
+
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
@@ -204,5 +248,6 @@ export {
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getAllUserVideos
 }
